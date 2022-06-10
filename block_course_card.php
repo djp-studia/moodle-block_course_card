@@ -8,6 +8,28 @@ class block_course_card extends block_base
 
     }
 
+    public function get_course_image($courseObj)
+    {
+        global $CFG;
+        $course = new core_course_list_element($courseObj);
+
+        $imageurl = '';
+        foreach ($course->get_course_overviewfiles() as $file) {
+            if ($file->is_valid_image()) {
+                $imagepath = '/' . $file->get_contextid() .
+                    '/' . $file->get_component() .
+                    '/' . $file->get_filearea() .
+                    $file->get_filepath() .
+                    $file->get_filename();
+                $imageurl = file_encode_url($CFG->wwwroot . '/pluginfile.php', $imagepath, false);
+            }
+        }
+        if ($imageurl == "") {
+            $imageurl = "";
+        }
+        return $imageurl;
+    }
+
     public function get_content()
     {
         global $OUTPUT;
@@ -62,18 +84,19 @@ class block_course_card extends block_base
         $courses = $DB->get_records_sql($sql);
 
         foreach ($courses as $course) {
+            // check jp tag
             $tags = array_values(core_tag_tag::get_item_tags_array("core", "course", $course->id));
             if (in_array("1 JP", $tags)) {
                 $course->has_jp = true;
             } else {
                 $course->no_jp = true;
             }
+
+            // get course url and image url
+            $course->image_url = $this->get_course_image($course);
+
             $course->url = new moodle_url("/course/view.php", array("id" => $course->id));
         }
-
-//        echo '<pre>';
-//        print_r($this->config);
-//        echo '</pre>';
 
         $data = array(
             "courses" => array_values($courses),
@@ -98,10 +121,11 @@ class block_course_card extends block_base
         } else {
             $data["academic"] = true;
         }
-//        echo '<pre>';
-//        print_r($this->config);
+
+//        echo "<pre>";
 //        print_r($data);
-//        echo '</pre>';
+//        echo "</pre>";
+
         $this->content->text = $OUTPUT->render_from_template("block_course_card/content-tw-$theme", $data);
 
         return $this->content;

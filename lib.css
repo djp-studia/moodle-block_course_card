@@ -627,6 +627,10 @@ video {
   display: grid;
 }
 
+.tw-aspect-video {
+  aspect-ratio: 16 / 9;
+}
+
 .tw-h-96 {
   height: 24rem;
 }
