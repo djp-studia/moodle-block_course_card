@@ -27,7 +27,23 @@ class block_course_card extends block_base
         if ($imageurl == "") {
             $imageurl = "";
         }
+
+        if ($imageurl == '') {
+            return new moodle_url('/blocks/course_card/dist/images/course.png');
+        }
+
         return $imageurl;
+    }
+
+    public function get_course_participant($courseId) {
+        global $DB;
+        $result = $DB->get_record_sql("SELECT COUNT(1) total
+        FROM {user_enrolments} A
+        JOIN {enrol} B ON A.enrolid = B.id
+        WHERE userid IS NOT NULL
+        AND B.courseid = $courseId");
+
+        return number_format($result->total, 0, ",", ".");
     }
 
     public function get_content()
@@ -72,14 +88,14 @@ class block_course_card extends block_base
             $course_list = $this->config->course_list;
             $course_list = preg_replace('/[^\d,]/i', '', $course_list);
             $sql .= "AND A.id in ($course_list)";
-        } else {
-            if(empty($this->config->limit)) {
-                $limit = 10;
-            } else {
-                $limit = $this->config->limit;
-            }
-            $sql .= " LIMIT $limit";
         }
+
+        if(empty($this->config->limit)) {
+            $limit = 10;
+        } else {
+            $limit = $this->config->limit;
+        }
+        $sql .= " ORDER BY A.id DESC LIMIT $limit";
 
         $courses = $DB->get_records_sql($sql);
 
@@ -94,7 +110,7 @@ class block_course_card extends block_base
 
             // get course url and image url
             $course->image_url = $this->get_course_image($course);
-
+            $course->participant = $this->get_course_participant($course->id);
             $course->url = new moodle_url("/course/view.php", array("id" => $course->id));
         }
 
@@ -116,15 +132,16 @@ class block_course_card extends block_base
         } else {
             $theme = "rose";
         }
+
         if(!empty($this->config->icon)){
             $data[$this->config->icon] = true;
         } else {
             $data["academic"] = true;
         }
 
-//        echo "<pre>";
-//        print_r($data);
-//        echo "</pre>";
+    //    echo "<pre>";
+    //    print_r($data);
+    //    echo "</pre>";
 
         $this->content->text = $OUTPUT->render_from_template("block_course_card/content-tw-$theme", $data);
 
