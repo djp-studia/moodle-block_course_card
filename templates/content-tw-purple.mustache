@@ -1,5 +1,5 @@
 <div class="tw-flex tw-items-center tw-mb-16 tw-w-full">
-    <div class="tw-flex tw-relative tw-bg-white tw-shadow-lg tw-w-64 tw-h-96 tw-rounded-2xl tw-overflow-hidden tw-p-4 tw-pr-16" style="border: 10px">
+    <div class="tw-flex tw-absolute tw-bg-white tw-shadow-lg tw-w-64 tw-h-96 tw-rounded-2xl tw-overflow-hidden tw-p-4 tw-pr-16" style="border: 10px">
         <div class="tw-bg-purple-300/25 tw-rounded-full tw-h-96 tw-w-96 -tw-ml-32 -tw-mt-32 tw-absolute">
         </div>
         {{#academic}}
@@ -52,14 +52,16 @@
             {{/link}}
         </div>
     </div>
-    <div class="-tw-ml-8 tw-w-full">
+    <div class="tw-w-full tw-ml-56">
         <section class="splide" aria-label="Splide Basic HTML Example">
             <div class="splide__track">
                 <ul class="splide__list">
                     {{#courses}}
                     <li class="splide__slide">
                         <div class="tw-flex tw-flex-col tw-bg-white tw-h-80 tw-rounded-lg tw-shadow-md tw-my-2 tw-overflow-hidden">
-                            <img class="tw-aspect-video tw-bg-slate-100" src="{{ image_url }}" alt="{{course_name}}">
+                            <div class="tw-aspect-video tw-bg-slate-100 overflow-hidden h-full">
+                                <img src="{{ image_url }}" alt="{{course_name}}">
+                            </div>
                             <div class="tw-p-3 tw-flex tw-flex-col tw-space-y-4 tw-flex-grow">
                                 <h3 class="tw-text-md tw-line-clamp-2 tw-h-10">{{ course_name }}</h3>
                                 <div class="tw-space-y-2">
