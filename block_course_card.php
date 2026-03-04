@@ -35,17 +35,6 @@ class block_course_card extends block_base
         return $imageurl;
     }
 
-    public function get_course_participant($courseId) {
-        global $DB;
-        $result = $DB->get_record_sql("SELECT COUNT(1) total
-        FROM {user_enrolments} A
-        JOIN {enrol} B ON A.enrolid = B.id
-        WHERE userid IS NOT NULL
-        AND B.courseid = $courseId");
-
-        return number_format($result->total, 0, ",", ".");
-    }
-
     public function get_content()
     {
         global $OUTPUT;
@@ -122,6 +111,9 @@ class block_course_card extends block_base
             // get course url and image url
             $course->image_url = $this->get_course_image($course);
             $course->url = new moodle_url("/course/view.php", array("id" => $course->id));
+
+            // format number
+            $course->participant = number_format($course->participant, 0, ",", ".");
         }
 
         $data = array(
@@ -148,10 +140,6 @@ class block_course_card extends block_base
         } else {
             $data["academic"] = true;
         }
-
-//       echo "<pre>";
-//       print_r($data);
-//       echo "</pre>";
 
         $this->content->text = $OUTPUT->render_from_template("block_course_card/content-tw-$theme", $data);
 
