@@ -71,23 +71,35 @@ class block_course_card extends block_base
         }
 
         // Add logic here to define your template data or any other content.
-        $sql = "SELECT A.id,
-               A.fullname course_name,
-               B.name category
-        FROM {course} A
-        JOIN {course_categories} B ON A.category = B.id
-        WHERE A.id > 1 ";
+        $sql = "SELECT course.id,
+               course.fullname course_name,
+               cat.name category,
+               CAST(cfdata.value AS SIGNED) as learninghour,
+               participants.total participant
+        FROM {course} course
+        LEFT JOIN {course_categories} cat ON course.category = cat.id
+        LEFT JOIN (
+            SELECT
+                enrol.courseid course_id,
+                COUNT(enrolment.userid) total
+            FROM {enrol} enrol
+            LEFT JOIN {user_enrolments} enrolment ON enrolment.enrolid = enrol.id
+            GROUP BY 1
+        ) AS participants ON course.id = participants.course_id
+        LEFT JOIN {customfield_data} cfdata ON cfdata.instanceid = course.id
+        LEFT JOIN {customfield_field} cffield ON cfdata.fieldid = cffield.id AND cffield.shortname = 'jampelajaran'
+        WHERE course.id > 1 ";
 
         // if category is set, filter course by category limit 10
         if(!empty($this->config->category)) {
             $category = $this->config->category;
             if($category != "") {
-                $sql .= "AND A.category = $category";
+                $sql .= " AND course.category = $category";
             }
         } else if (!empty($this->config->course_list)){
             $course_list = $this->config->course_list;
             $course_list = preg_replace('/[^\d,]/i', '', $course_list);
-            $sql .= "AND A.id in ($course_list)";
+            $sql .= " AND course.id in ($course_list)";
         }
 
         if(empty($this->config->limit)) {
@@ -95,14 +107,13 @@ class block_course_card extends block_base
         } else {
             $limit = $this->config->limit;
         }
-        $sql .= " ORDER BY A.id DESC LIMIT $limit";
+        $sql .= " ORDER BY course.id DESC LIMIT $limit";
 
         $courses = $DB->get_records_sql($sql);
 
         foreach ($courses as $course) {
             // check jp tag
-            $tags = array_values(core_tag_tag::get_item_tags_array("core", "course", $course->id));
-            if (in_array("1 JP", $tags)) {
+            if ($course->learninghour > 0) {
                 $course->has_jp = true;
             } else {
                 $course->no_jp = true;
@@ -110,7 +121,6 @@ class block_course_card extends block_base
 
             // get course url and image url
             $course->image_url = $this->get_course_image($course);
-            $course->participant = $this->get_course_participant($course->id);
             $course->url = new moodle_url("/course/view.php", array("id" => $course->id));
         }
 
@@ -139,9 +149,9 @@ class block_course_card extends block_base
             $data["academic"] = true;
         }
 
-    //    echo "<pre>";
-    //    print_r($data);
-    //    echo "</pre>";
+//       echo "<pre>";
+//       print_r($data);
+//       echo "</pre>";
 
         $this->content->text = $OUTPUT->render_from_template("block_course_card/content-tw-$theme", $data);
 
